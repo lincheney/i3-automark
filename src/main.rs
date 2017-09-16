@@ -6,7 +6,7 @@ use i3ipc::event::Event;
 use i3ipc::event::inner::WindowChange;
 use i3ipc::reply::{Node, NodeType};
 
-static MARKS: &'static str = "QWERTYUIOP";
+const MARKS: &str = "QWERTYUIOP";
 
 fn refresh_all_marks(conn: &mut I3Connection) {
     let ws = conn.get_workspaces().unwrap();
