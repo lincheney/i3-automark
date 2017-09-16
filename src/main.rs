@@ -1,3 +1,5 @@
+use std::str::Chars;
+
 extern crate i3ipc;
 use i3ipc::{I3Connection, I3EventListener, Subscription};
 use i3ipc::event::Event;
@@ -11,28 +13,29 @@ fn refresh_all_marks(conn: &mut I3Connection) {
     let visible_ws = ws.workspaces.into_iter().filter(|w| w.visible).map(|w| w.name).collect();
 
     let tree = conn.get_tree().unwrap();
-    mark_windows(0, &tree, &visible_ws, conn);
+    mark_windows(MARKS.chars(), &tree, &visible_ws, conn);
 }
 
-fn mark_window(ix: usize, id: i64, conn: &mut I3Connection) {
-    let mark = format!(" {} ", &MARKS[ix..ix+1]);
+fn mark_window(mark: char, id: i64, conn: &mut I3Connection) {
+    let mark = format!(" {} ", mark);
     let cmd = format!("[con_id=\"{}\"] mark --replace {:?}", id, mark);
     conn.command(&cmd).unwrap();
 }
 
-fn mark_windows(ix: usize, node: &Node, visible_ws: &Vec<String>, conn: &mut I3Connection) -> usize {
-    let mut ix = ix;
+fn mark_windows<'a>(mut marks: Chars<'a>, node: &Node, visible_ws: &Vec<String>, conn: &mut I3Connection) -> Chars<'a> {
     if node.window.is_some() {
-        mark_window(ix, node.id, conn);
-        ix += 1;
+        match marks.next() {
+            Some(m) => mark_window(m, node.id, conn),
+            None => return marks,
+        }
     }
 
     match node.nodetype {
-        NodeType::DockArea => return ix,
+        NodeType::DockArea => return marks,
         NodeType::Workspace => {
             if let Some(ref name) = node.name {
                 if visible_ws.iter().position(|x| *x == *name).is_none() {
-                    return ix;
+                    return marks
                 }
             }
         },
@@ -40,9 +43,9 @@ fn mark_windows(ix: usize, node: &Node, visible_ws: &Vec<String>, conn: &mut I3C
     }
 
     for child in node.nodes.iter() {
-        ix = mark_windows(ix, child, visible_ws, conn);
+        marks = mark_windows(marks, child, visible_ws, conn);
     }
-    ix
+    marks
 }
 
 fn main() {
