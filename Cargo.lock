@@ -2,7 +2,7 @@
 name = "i3-automark"
 version = "0.1.0"
 dependencies = [
- "i3ipc 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "i3ipc 0.6.0 (git+https://github.com/lincheney/i3ipc-rs?branch=support-floating_nodes-in-tree-reply)",
 ]
 
 [[package]]
@@ -36,7 +36,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "i3ipc"
 version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/lincheney/i3ipc-rs?branch=support-floating_nodes-in-tree-reply#4388e486d38c97cd87917a8826c1389aac742a9e"
 dependencies = [
  "byteorder 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -189,7 +189,7 @@ dependencies = [
 "checksum conv 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "78ff10625fd0ac447827aa30ea8b861fead473bb60aeb73af6c1c58caf0d1299"
 "checksum custom_derive 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "ef8ae57c4978a2acd8b869ce6b9ca1dfe817bff704c220209fdef2c0b75a01b9"
 "checksum debug-builders 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0f5d8e3d14cabcb2a8a59d7147289173c6ada77a0bc526f6b85078f941c0cf12"
-"checksum i3ipc 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5af426ca6a72b4daf8fc14725798634fddba11c44eba9e0e2c0a6dd69c537c2e"
+"checksum i3ipc 0.6.0 (git+https://github.com/lincheney/i3ipc-rs?branch=support-floating_nodes-in-tree-reply)" = "<none>"
 "checksum libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "e32a70cf75e5846d53a673923498228bbec6a8624708a9ea5645f075d6276122"
 "checksum libc 0.2.30 (registry+https://github.com/rust-lang/crates.io-index)" = "2370ca07ec338939e356443dac2296f581453c35fe1e3a3ed06023c49435f915"
 "checksum log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "880f77541efa6e5cc74e76910c9884d9859683118839d6a1dc3b11e63512565b"

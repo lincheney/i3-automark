@@ -42,7 +42,7 @@ fn mark_windows<'a>(mut marks: Chars<'a>, node: &Node, visible_ws: &Vec<String>,
         _ => (),
     }
 
-    for child in node.nodes.iter() {
+    for child in node.nodes.iter().chain(node.floating_nodes.iter()) {
         marks = mark_windows(marks, child, visible_ws, conn);
     }
     marks
