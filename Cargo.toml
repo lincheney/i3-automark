@@ -4,5 +4,4 @@ version = "0.1.0"
 authors = ["林千里 <lincheney@gmail.com>"]
 
 [dependencies]
-i3ipc = { git = "https://github.com/lincheney/i3ipc-rs", branch = "support-floating_nodes-in-tree-reply" }
-# i3ipc = "0.6.0"
+i3ipc = "0.7.0"
