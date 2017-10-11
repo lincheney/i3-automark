@@ -17,8 +17,7 @@ fn refresh_all_marks(conn: &mut I3Connection) {
 }
 
 fn mark_window(mark: char, id: i64, conn: &mut I3Connection) {
-    let mark = format!(" {} ", mark);
-    let cmd = format!("[con_id=\"{}\"] mark --replace {:?}", id, mark);
+    let cmd = format!("[con_id=\"{}\"] mark --replace {}", id, mark);
     conn.command(&cmd).unwrap();
 }
 
