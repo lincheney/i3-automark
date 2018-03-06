@@ -9,11 +9,16 @@ use i3ipc::reply::{Node, NodeType};
 const MARKS: &str = "QWERTYUIOP";
 
 fn refresh_all_marks(conn: &mut I3Connection) {
-    let ws = conn.get_workspaces().unwrap();
-    let visible_ws = ws.workspaces.into_iter().filter(|w| w.visible).map(|w| w.name).collect();
+    let mut workspaces = conn.get_workspaces().unwrap().workspaces;
+    // sort left to right, top to bottom
+    workspaces.sort_by_key(|w| (w.rect.1, w.rect.0));
 
     let tree = conn.get_tree().unwrap();
-    mark_windows(MARKS.chars(), &tree, &visible_ws, conn);
+
+    let mut marks = MARKS.chars();
+    for ws_name in workspaces.into_iter().filter(|w| w.visible).map(|w| w.name) {
+        marks = mark_windows_on_ws(marks, &tree, &ws_name, conn);
+    }
 }
 
 fn mark_window(mark: char, id: i64, conn: &mut I3Connection) {
@@ -21,7 +26,7 @@ fn mark_window(mark: char, id: i64, conn: &mut I3Connection) {
     conn.command(&cmd).unwrap();
 }
 
-fn mark_windows<'a>(mut marks: Chars<'a>, node: &Node, visible_ws: &Vec<String>, conn: &mut I3Connection) -> Chars<'a> {
+fn mark_windows_on_ws<'a>(mut marks: Chars<'a>, node: &Node, ws_name: &String, conn: &mut I3Connection) -> Chars<'a> {
     if node.window.is_some() {
         match marks.next() {
             Some(m) => mark_window(m, node.id, conn),
@@ -31,18 +36,14 @@ fn mark_windows<'a>(mut marks: Chars<'a>, node: &Node, visible_ws: &Vec<String>,
 
     match node.nodetype {
         NodeType::DockArea => return marks,
-        NodeType::Workspace => {
-            if let Some(ref name) = node.name {
-                if visible_ws.iter().position(|x| *x == *name).is_none() {
-                    return marks
-                }
-            }
+        NodeType::Workspace if node.name.as_ref() != Some(ws_name) => {
+            return marks
         },
         _ => (),
     }
 
     for child in node.nodes.iter().chain(node.floating_nodes.iter()) {
-        marks = mark_windows(marks, child, visible_ws, conn);
+        marks = mark_windows_on_ws(marks, child, ws_name, conn);
     }
     marks
 }
