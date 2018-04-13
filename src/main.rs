@@ -1,4 +1,5 @@
 use std::str::Chars;
+use std::env;
 
 extern crate i3ipc;
 use i3ipc::{I3Connection, I3EventListener, Subscription};
@@ -6,16 +7,16 @@ use i3ipc::event::Event;
 use i3ipc::event::inner::WindowChange;
 use i3ipc::reply::{Node, NodeType};
 
-const MARKS: &str = "QWERTYUIOP";
+const DEFAULT_MARKS: &str = "QWERTYUIOP";
 
-fn refresh_all_marks(conn: &mut I3Connection) {
+fn refresh_all_marks(conn: &mut I3Connection, marks: &String) {
     let mut workspaces = conn.get_workspaces().unwrap().workspaces;
     // sort left to right, top to bottom
     workspaces.sort_by_key(|w| (w.rect.1, w.rect.0));
 
     let tree = conn.get_tree().unwrap();
 
-    let mut marks = MARKS.chars();
+    let mut marks = marks.chars();
     for ws_name in workspaces.into_iter().filter(|w| w.visible).map(|w| w.name) {
         marks = mark_windows_on_ws(marks, &tree, &ws_name, conn);
     }
@@ -49,8 +50,10 @@ fn mark_windows_on_ws<'a>(mut marks: Chars<'a>, node: &Node, ws_name: &String, c
 }
 
 fn main() {
+    let marks = env::args().nth(1).unwrap_or_else(|| DEFAULT_MARKS.to_string());
+
     let mut conn = I3Connection::connect().unwrap();
-    refresh_all_marks(&mut conn);
+    refresh_all_marks(&mut conn, &marks);
 
     let mut listener = I3EventListener::connect().unwrap();
     let subs = [Subscription::Workspace, Subscription::Output, Subscription::Window];
@@ -58,10 +61,10 @@ fn main() {
 
     for event in listener.listen() {
         match event.unwrap() {
-            Event::WorkspaceEvent(_) | Event::OutputEvent(_) => refresh_all_marks(&mut conn),
+            Event::WorkspaceEvent(_) | Event::OutputEvent(_) => refresh_all_marks(&mut conn, &marks),
             Event::WindowEvent(e) => {
                 match e.change {
-                    WindowChange::New | WindowChange::Close | WindowChange::Move => refresh_all_marks(&mut conn),
+                    WindowChange::New | WindowChange::Close | WindowChange::Move => refresh_all_marks(&mut conn, &marks),
                     _ => (),
                 }
             },
