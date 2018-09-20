@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 import time
+import itertools
 
 class SocketClosedException(Exception): pass
 MARKS = 'QWERTYUIOP'
@@ -60,22 +61,25 @@ def read_msg(sock):
     return type, json.loads(sock.recv(length))
 
 def refresh_all_marks(sock, marks):
-    visible_ws = [w['name'] for w in send_msg(sock, 'get_workspaces') if w['visible']]
+    # sort left to right, top to bottom
+    workspaces = sorted(send_msg(sock, 'get_workspaces'), key=lambda w: (w['rect']['y'], w['rect']['x']))
+    visible_ws = [w['name'] for w in workspaces if w['visible']]
     tree = send_msg(sock, 'get_tree')
 
-    for mark, id in zip(marks, get_windows(tree, visible_ws)):
+    windows = itertools.chain.from_iterable(get_windows(tree, workspace) for workspace in visible_ws)
+    for mark, id in zip(marks, windows):
         send_msg(sock, 'run_command', '[con_id="{}"] mark --replace {}'.format(id, mark))
 
-def get_windows(node, visible_ws):
+def get_windows(node, workspace):
     if node['window']:
         yield node['id']
     elif node['type'] == 'dockarea':
         return
-    elif node['type'] == 'workspace' and node['name'] not in visible_ws:
+    elif node['type'] == 'workspace' and node['name'] != workspace:
         return
     else:
         for child in node['nodes'] + node['floating_nodes']:
-            yield from get_windows(child, visible_ws)
+            yield from get_windows(child, workspace)
 
 if __name__ == '__main__':
     no_socket_counter = 0
