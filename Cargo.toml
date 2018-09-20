@@ -1,7 +1,0 @@
-[package]
-name = "i3-automark"
-version = "0.1.0"
-authors = ["林千里 <lincheney@gmail.com>"]
-
-[dependencies]
-i3ipc = "0.7.0"
