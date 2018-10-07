@@ -46,7 +46,7 @@ def send_msg(sock, command, payload=''):
             if command == 'run_command':
                 response = response[0]
             if isinstance(response, dict) and not response.get('success', True):
-                raise Exception(response['error'])
+                raise Exception(response.get('error'))
             return response
 
 def read_msg(sock):
