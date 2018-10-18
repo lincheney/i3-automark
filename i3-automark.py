@@ -35,6 +35,16 @@ EVENTS = [
     'tick',
 ]
 
+def recv(sock, length):
+    buf = b''
+    while length:
+        data = sock.recv(length)
+        if not data:
+            break
+        buf += data
+        length -= len(data)
+    return buf
+
 def send_msg(sock, command, payload=''):
     payload = payload.encode('utf-8')
     msg = struct.pack('II', len(payload), COMMANDS.index(command))
@@ -50,7 +60,7 @@ def send_msg(sock, command, payload=''):
             return response
 
 def read_msg(sock):
-    reply = sock.recv(14)
+    reply = recv(sock, 14)
     if not reply:
         raise SocketClosedException
     length, type = struct.unpack('ii', reply[6:])
@@ -58,7 +68,7 @@ def read_msg(sock):
         type = EVENTS[type & 0x7fffffff]
     else:
         type = COMMANDS[type]
-    return type, json.loads(sock.recv(length))
+    return type, json.loads(recv(sock, length))
 
 def refresh_all_marks(sock, marks):
     # sort left to right, top to bottom
