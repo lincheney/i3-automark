@@ -105,7 +105,7 @@ if __name__ == '__main__':
                 refresh_all_marks(sock, marks)
                 while True:
                     type, event = read_msg(sock)
-                    if type in {'workspace', 'output'} or (type == 'window' and event['change'] in {'new', 'close', 'move'}):
+                    if type in {'workspace', 'output'} or (type == 'window' and event['change'] in {'new', 'close', 'move', 'floating'}):
                         refresh_all_marks(sock, marks)
 
         except SocketClosedException:
