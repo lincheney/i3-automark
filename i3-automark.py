@@ -78,7 +78,13 @@ def refresh_all_marks(sock, marks):
 
     windows = itertools.chain.from_iterable(get_windows(tree, workspace) for workspace in visible_ws)
     for mark, id in zip(marks, windows):
-        send_msg(sock, 'run_command', '[con_id="{}"] mark --replace {}'.format(id, mark))
+        try:
+            send_msg(sock, 'run_command', '[con_id="{}"] mark --replace {}'.format(id, mark))
+        except Exception as e:
+            if str(e) == "Given criteria don't match a window":
+                pass
+            else:
+                raise
 
 def get_windows(node, workspace):
     if node['window']:
