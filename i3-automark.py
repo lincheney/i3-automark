@@ -87,7 +87,7 @@ def refresh_all_marks(sock, marks):
                 raise
 
 def get_windows(node, workspace):
-    if node['window']:
+    if node['window_rect']['height'] and node['window_rect']['width']:
         yield node['id']
     elif node['type'] == 'dockarea':
         return
@@ -98,21 +98,31 @@ def get_windows(node, workspace):
             yield from get_windows(child, workspace)
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--wm', choices=('i3', 'sway'))
+    parser.add_argument('marks', nargs='?', default=MARKS, help='Default: %(default)s')
+    args = parser.parse_args()
+
+    events = ['workspace', 'window']
+    if args.wm == 'i3':
+        # sway does not support output
+        events.append('output')
+
     no_socket_counter = 0
-    marks = sys.argv[1] if len(sys.argv) > 1 else MARKS
     while True:
         try:
-            socketpath = subprocess.check_output(['i3', '--get-socketpath']).rstrip(b'\n')
+            socketpath = subprocess.check_output([args.wm, '--get-socketpath']).rstrip(b'\n')
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
                 sock.connect(socketpath)
                 no_socket_counter = 0
 
-                send_msg(sock, 'subscribe', json.dumps(['workspace', 'output', 'window']))
-                refresh_all_marks(sock, marks)
+                send_msg(sock, 'subscribe', json.dumps(events))
+                refresh_all_marks(sock, args.marks)
                 while True:
                     type, event = read_msg(sock)
                     if type in {'workspace', 'output'} or (type == 'window' and event['change'] in {'new', 'close', 'move', 'floating'}):
-                        refresh_all_marks(sock, marks)
+                        refresh_all_marks(sock, args.marks)
 
         except SocketClosedException:
             pass
