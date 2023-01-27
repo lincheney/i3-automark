@@ -100,7 +100,7 @@ def get_windows(node, workspace):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wm', choices=('i3', 'sway'), default='i3')
+    parser.add_argument('--wm', choices=('i3', 'sway'), default='i3', help='Default: %(default)s')
     parser.add_argument('marks', nargs='?', default=MARKS, help='Default: %(default)s')
     args = parser.parse_args()
 
