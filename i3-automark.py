@@ -70,13 +70,20 @@ def read_msg(sock):
         type = COMMANDS[type]
     return type, json.loads(recv(sock, length))
 
-def refresh_all_marks(sock, marks):
-    # sort left to right, top to bottom
-    workspaces = sorted(send_msg(sock, 'get_workspaces'), key=lambda w: (w['rect']['y'], w['rect']['x']))
-    visible_ws = [w['name'] for w in workspaces if w['visible']]
+def refresh_all_marks(sock, marks, focused_only=False):
     tree = send_msg(sock, 'get_tree')
+    workspaces = send_msg(sock, 'get_workspaces')
+    if focused_only:
+        focused_ws = next((w['name'] for w in workspaces if w['focused']), None)
+        if focused_ws is None:
+            return
+        windows = get_windows(tree, focused_ws)
+    else:
+        # sort left to right, top to bottom
+        workspaces = sorted(workspaces, key=lambda w: (w['rect']['y'], w['rect']['x']))
+        visible_ws = [w['name'] for w in workspaces if w['visible']]
+        windows = itertools.chain.from_iterable(get_windows(tree, workspace) for workspace in visible_ws)
 
-    windows = itertools.chain.from_iterable(get_windows(tree, workspace) for workspace in visible_ws)
     for mark, id in zip(marks, windows):
         try:
             send_msg(sock, 'run_command', '[con_id="{}"] mark --replace {}'.format(id, mark))
@@ -100,6 +107,7 @@ def get_windows(node, workspace):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument('--focused-only', action='store_true', help='Only mark windows on the focused workspace')
     parser.add_argument('--wm', choices=('i3', 'sway'), default='i3', help='Default: %(default)s')
     parser.add_argument('marks', nargs='?', default=MARKS, help='Default: %(default)s')
     args = parser.parse_args()
@@ -118,11 +126,11 @@ if __name__ == '__main__':
                 no_socket_counter = 0
 
                 send_msg(sock, 'subscribe', json.dumps(events))
-                refresh_all_marks(sock, args.marks)
+                refresh_all_marks(sock, args.marks, args.focused_only)
                 while True:
                     type, event = read_msg(sock)
                     if type in {'workspace', 'output'} or (type == 'window' and event['change'] in {'new', 'close', 'move', 'floating'}):
-                        refresh_all_marks(sock, args.marks)
+                        refresh_all_marks(sock, args.marks, args.focused_only)
 
         except SocketClosedException:
             pass
