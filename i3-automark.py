@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 import itertools
+from collections import deque
 
 class SocketClosedException(Exception): pass
 MARKS = 'QWERTYUIOP'
@@ -45,6 +46,7 @@ def recv(sock, length):
         length -= len(data)
     return buf
 
+msg_backlog = deque()
 def send_msg(sock, command, payload=''):
     payload = payload.encode('utf-8')
     msg = struct.pack('II', len(payload), COMMANDS.index(command))
@@ -58,6 +60,7 @@ def send_msg(sock, command, payload=''):
             if isinstance(response, dict) and not response.get('success', True):
                 raise Exception(response.get('error'))
             return response
+        msg_backlog.append((type, response))
 
 def read_msg(sock):
     reply = recv(sock, 14)
@@ -120,7 +123,10 @@ if __name__ == '__main__':
                 send_msg(sock, 'subscribe', json.dumps(events))
                 refresh_all_marks(sock, args.marks)
                 while True:
-                    type, event = read_msg(sock)
+                    if msg_backlog:
+                        type, event = msg_backlog.popleft()
+                    else:
+                        type, event = read_msg(sock)
                     if type in {'workspace', 'output'} or (type == 'window' and event['change'] in {'new', 'close', 'move', 'floating'}):
                         refresh_all_marks(sock, args.marks)
 
