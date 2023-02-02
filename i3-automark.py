@@ -81,7 +81,7 @@ def refresh_all_marks(sock, marks):
         try:
             send_msg(sock, 'run_command', '[con_id="{}"] mark --replace {}'.format(id, mark))
         except Exception as e:
-            if str(e) == "Given criteria don't match a window":
+            if str(e) in {"Given criteria don't match a window", "No matching node."}:
                 pass
             else:
                 raise
