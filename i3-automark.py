@@ -74,6 +74,7 @@ def refresh_all_marks(sock, marks, focused_only=False):
     tree = send_msg(sock, 'get_tree')
     workspaces = send_msg(sock, 'get_workspaces')
     if focused_only:
+        send_msg(sock, 'run_command', 'unmark')
         focused_ws = next((w['name'] for w in workspaces if w['focused']), None)
         if focused_ws is None:
             return
